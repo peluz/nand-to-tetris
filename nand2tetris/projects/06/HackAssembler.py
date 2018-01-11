@@ -54,6 +54,9 @@ class Parser(object):
             return self.command.split(';', 1)[1]
         else:
             return None
+        
+    def restart(self):
+        self.f.seek(0)
     
     def close(self):
         self.f.close()
@@ -122,26 +125,83 @@ class Coder(object):
         return self.jumpCodes[mnemonic]
 
 
+class SymbolTable(object):
+    def __init__(self):
+        self.symbolTable = {
+            'SP': 0,
+            'LCL': 1,
+            'ARG': 2,
+            'THIS': 3,
+            'THAT': 4,
+            'R0' : 0,
+            'R1' : 1,
+            'R2' : 2,
+            'R3' : 3,
+            'R4' : 4,
+            'R5' : 5,
+            'R6' : 6,
+            'R7' : 7,
+            'R8' : 8,
+            'R9' : 9,
+            'R10' : 10,
+            'R11' : 11,
+            'R12' : 12,
+            'R13' : 13,
+            'R14' : 14,
+            'R15' : 15,
+            'SCREEN': 16384,
+            'KBD': 24576
+        }
+        
+    def addEntry(self, symbol, address):
+        self.symbolTable[symbol] = address
+        
+    def contains(self, symbol):
+        return symbol in self.symbolTable
+    
+    def getAddress(self, symbol):
+        return self.symbolTable[symbol]
+
+
 class HackAssembler(object):
     def __init__(self, assembleFilePath):
         self.parser = Parser(assembleFilePath)
         self.coder = Coder()
+        self.symbolTable = SymbolTable()
         self.hackFilePath = assembleFilePath.rstrip('asm') + 'hack'
         self.f = open(self.hackFilePath, 'w')
+        self.symbolAddress = 16
+        self.pseudoCommandAddress = 0
         
+    def buildPseudoCommandTable(self):
+        while self.parser.advance():
+            if self.parser.commandType() != 'L_COMMAND':
+                self.pseudoCommandAddress += 1
+            else:
+                symbol = self.parser.symbol()
+                self.symbolTable.addEntry(symbol, self.pseudoCommandAddress)                
+        self.parser.restart()
+    
     def translate(self):
         while self.parser.advance():
             if self.parser.commandType() == 'A_COMMAND':
                 self.printACommand()
             elif self.parser.commandType() == 'C_COMMAND':
                 self.printCCommand()
-            else:
-                pass
         self.close()
     
     def printACommand(self):
-        code = "{0:b}".format(int(self.parser.symbol())).zfill(16)
-        self.f.write(code + '\n')
+        symbol = self.parser.symbol()
+        if symbol[0].isdigit():
+            code = symbol
+        elif self.symbolTable.contains(symbol):
+            code = self.symbolTable.getAddress(symbol)
+        else:
+            self.symbolTable.addEntry(symbol, self.symbolAddress)
+            code = self.symbolAddress
+            self.symbolAddress += 1
+        code = "{0:b}".format(int(code)).zfill(16)
+        self.f.write(str(code) + '\n')
         
     def printCCommand(self):
         code = '111'
@@ -149,11 +209,14 @@ class HackAssembler(object):
         code += self.coder.dest(self.parser.dest())
         code += self.coder.jump(self.parser.jump())
         self.f.write(code + '\n')
+        
+    def assemble(self):
+        self.buildPseudoCommandTable()
+        self.translate()
     
     def close(self):
         self.f.close()
         
-assembleFilePath = sys.argv[1]
-hack = HackAssembler(assembleFilePath)
-hack.translate()
-    
+#assembleFilePath = sys.argv[1]
+#hack = HackAssembler(assembleFilePath)
+#hack.assemble()
