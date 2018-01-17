@@ -1,0 +1,138 @@
+// PUSH CONSTANT 3030
+@3030
+D=A
+@SP
+A=M
+M=D
+@SP
+M=M+1
+// POP POINTER 0
+@SP
+M=M-1
+A=M
+D=M
+@THIS
+M=D
+// PUSH CONSTANT 3040
+@3040
+D=A
+@SP
+A=M
+M=D
+@SP
+M=M+1
+// POP POINTER 1
+@SP
+M=M-1
+A=M
+D=M
+@THAT
+M=D
+// PUSH CONSTANT 32
+@32
+D=A
+@SP
+A=M
+M=D
+@SP
+M=M+1
+// POP THIS 2
+@2
+D=A
+@THIS
+D=D+M
+@R13
+M=D
+@SP
+M=M-1
+A=M
+D=M
+@R13
+A=M
+M=D
+// PUSH CONSTANT 46
+@46
+D=A
+@SP
+A=M
+M=D
+@SP
+M=M+1
+// POP THAT 6
+@6
+D=A
+@THAT
+D=D+M
+@R13
+M=D
+@SP
+M=M-1
+A=M
+D=M
+@R13
+A=M
+M=D
+// PUSH POINTER 0
+@THIS
+D=M
+@SP
+A=M
+M=D
+@SP
+M=M+1
+// PUSH POINTER 1
+@THAT
+D=M
+@SP
+A=M
+M=D
+@SP
+M=M+1
+// ADD
+@SP
+M=M-1
+A=M
+D=M
+@SP
+A=M-1
+M=D+M
+// PUSH THIS 2
+@2
+D=A
+@THIS
+D=D+M
+A=D
+D=M
+@SP
+A=M
+M=D
+@SP
+M=M+1
+// SUB
+@SP
+M=M-1
+A=M
+D=M
+@SP
+A=M-1
+M=M-D
+// PUSH THAT 6
+@6
+D=A
+@THAT
+D=D+M
+A=D
+D=M
+@SP
+A=M
+M=D
+@SP
+M=M+1
+// ADD
+@SP
+M=M-1
+A=M
+D=M
+@SP
+A=M-1
+M=D+M

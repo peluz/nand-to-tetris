@@ -1,0 +1,266 @@
+// PUSH CONSTANT 10
+@10
+D=A
+@SP
+A=M
+M=D
+@SP
+M=M+1
+// POP LOCAL 0
+@0
+D=A
+@LCL
+D=D+M
+@R13
+M=D
+@SP
+M=M-1
+A=M
+D=M
+@R13
+A=M
+M=D
+// PUSH CONSTANT 21
+@21
+D=A
+@SP
+A=M
+M=D
+@SP
+M=M+1
+// PUSH CONSTANT 22
+@22
+D=A
+@SP
+A=M
+M=D
+@SP
+M=M+1
+// POP ARGUMENT 2
+@2
+D=A
+@ARG
+D=D+M
+@R13
+M=D
+@SP
+M=M-1
+A=M
+D=M
+@R13
+A=M
+M=D
+// POP ARGUMENT 1
+@1
+D=A
+@ARG
+D=D+M
+@R13
+M=D
+@SP
+M=M-1
+A=M
+D=M
+@R13
+A=M
+M=D
+// PUSH CONSTANT 36
+@36
+D=A
+@SP
+A=M
+M=D
+@SP
+M=M+1
+// POP THIS 6
+@6
+D=A
+@THIS
+D=D+M
+@R13
+M=D
+@SP
+M=M-1
+A=M
+D=M
+@R13
+A=M
+M=D
+// PUSH CONSTANT 42
+@42
+D=A
+@SP
+A=M
+M=D
+@SP
+M=M+1
+// PUSH CONSTANT 45
+@45
+D=A
+@SP
+A=M
+M=D
+@SP
+M=M+1
+// POP THAT 5
+@5
+D=A
+@THAT
+D=D+M
+@R13
+M=D
+@SP
+M=M-1
+A=M
+D=M
+@R13
+A=M
+M=D
+// POP THAT 2
+@2
+D=A
+@THAT
+D=D+M
+@R13
+M=D
+@SP
+M=M-1
+A=M
+D=M
+@R13
+A=M
+M=D
+// PUSH CONSTANT 510
+@510
+D=A
+@SP
+A=M
+M=D
+@SP
+M=M+1
+// POP TEMP 6
+@6
+D=A
+@5
+D=D+A
+@R13
+M=D
+@SP
+M=M-1
+A=M
+D=M
+@R13
+A=M
+M=D
+// PUSH LOCAL 0
+@0
+D=A
+@LCL
+D=D+M
+A=D
+D=M
+@SP
+A=M
+M=D
+@SP
+M=M+1
+// PUSH THAT 5
+@5
+D=A
+@THAT
+D=D+M
+A=D
+D=M
+@SP
+A=M
+M=D
+@SP
+M=M+1
+// ADD
+@SP
+M=M-1
+A=M
+D=M
+@SP
+A=M-1
+M=D+M
+// PUSH ARGUMENT 1
+@1
+D=A
+@ARG
+D=D+M
+A=D
+D=M
+@SP
+A=M
+M=D
+@SP
+M=M+1
+// SUB
+@SP
+M=M-1
+A=M
+D=M
+@SP
+A=M-1
+M=M-D
+// PUSH THIS 6
+@6
+D=A
+@THIS
+D=D+M
+A=D
+D=M
+@SP
+A=M
+M=D
+@SP
+M=M+1
+// PUSH THIS 6
+@6
+D=A
+@THIS
+D=D+M
+A=D
+D=M
+@SP
+A=M
+M=D
+@SP
+M=M+1
+// ADD
+@SP
+M=M-1
+A=M
+D=M
+@SP
+A=M-1
+M=D+M
+// SUB
+@SP
+M=M-1
+A=M
+D=M
+@SP
+A=M-1
+M=M-D
+// PUSH TEMP 6
+@6
+D=A
+@5
+D=D+A
+A=D
+D=M
+@SP
+A=M
+M=D
+@SP
+M=M+1
+// ADD
+@SP
+M=M-1
+A=M
+D=M
+@SP
+A=M-1
+M=D+M
