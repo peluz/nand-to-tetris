@@ -31,8 +31,8 @@ D=M
 @THAT
 M=D
 // CALL SYS.MAIN 0
-@Return0
-D=M
+@SYS.INIT$Return0
+D=A
 @SP
 M=M+1
 A=M-1
@@ -68,7 +68,7 @@ M=M+1
 @0
 D=A
 @5
-D=D-A
+D=D+A
 @SP
 D=M-D
 @ARG
@@ -77,7 +77,6 @@ M=D
 D=M
 @LCL
 M=D
-// GOTO SYS.MAIN
 @SYS.MAIN
 0;JMP
 (SYS.INIT$Return0)
@@ -97,10 +96,10 @@ A=M
 M=D
 (SYS.INIT$LOOP)
 // GOTO LOOP
-@LOOP
+@SYS.INIT$LOOP
 0;JMP
 // FUNCTION SYS.MAIN 5
-(SYS.INIT$SYS.MAIN)
+(SYS.MAIN)
 @SP
 A=M
 M=0
@@ -231,8 +230,8 @@ M=D
 @SP
 M=M+1
 // CALL SYS.ADD12 1
-@Return1
-D=M
+@SYS.MAIN$Return1
+D=A
 @SP
 M=M+1
 A=M-1
@@ -268,7 +267,7 @@ M=M+1
 @1
 D=A
 @5
-D=D-A
+D=D+A
 @SP
 D=M-D
 @ARG
@@ -277,7 +276,6 @@ M=D
 D=M
 @LCL
 M=D
-// GOTO SYS.ADD12
 @SYS.ADD12
 0;JMP
 (SYS.MAIN$Return1)

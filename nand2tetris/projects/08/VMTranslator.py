@@ -173,16 +173,17 @@ class CodeWriter(object):
         self.f.write("// {}\n".format((' ').join(['CALL',
                      functionName, numArgs])))
         # push return address
-        self.f.write('@Return{}\nD=M\n@SP\nM=M+1\nA=M-1\nM=D\n'.format(self.returnNum))
+        label = self.functionLabel + 'Return' + str(self.returnNum)
+        self.f.write('@{}\nD=A\n@SP\nM=M+1\nA=M-1\nM=D\n'.format(label))
         # push lcl, arg, this and that
         for segment in ['LCL', 'ARG', 'THIS', 'THAT']:
             self.f.write('@{}\nD=M\n@SP\nA=M\nM=D\n@SP\nM=M+1\n'.format(segment))
         # ARG = SP-n-5
-        self.f.write('@{}\nD=A\n@5\nD=D-A\n@SP\nD=M-D\n@ARG\nM=D\n'.format(numArgs))
+        self.f.write('@{}\nD=A\n@5\nD=D+A\n@SP\nD=M-D\n@ARG\nM=D\n'.format(numArgs))
         # LCL = SP
         self.f.write("@SP\nD=M\n@LCL\nM=D\n")
         # GOTO F
-        self.writeGoTo(functionName)
+        self.f.write('@{}\n0;JMP\n'.format(functionName))
         # Declare Label for return address
         self.writeLabel("Return" + str(self.returnNum))
         # Increment return address
@@ -199,14 +200,15 @@ class CodeWriter(object):
         Write assembly code that effects the goto command
         '''
         self.f.write("// {}\n".format((' ').join(['GOTO', label])))
-        self.f.write('@{}\n0;JMP\n'.format(label))
+        self.f.write('@{}{}\n0;JMP\n'.format(self.functionLabel, label))
         
     def writeIf(self, label):
         '''
         Writes assembly code that effects the if-goto command
         '''
         self.f.write("// {}\n".format((' ').join(['IF-GOTO', label])))
-        self.f.write("@SP\nM=M-1\nA=M\nD=M\n@{}\nD;JNE\n".format(label))
+        self.f.write("@SP\nM=M-1\nA=M\nD=M\n@{}{}\nD;JNE\n".format(
+                self.functionLabel, label))
     
     def writeFunction(self, functionName, numLocals):
         '''
@@ -214,6 +216,7 @@ class CodeWriter(object):
         '''
         self.f.write("// {}\n".format((' ').join(['FUNCTION', functionName,
                      numLocals])))
+        self.functionLabel = ''
         # Declare Label
         self.writeLabel(functionName)
         # Change functionLabel
