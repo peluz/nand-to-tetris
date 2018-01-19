@@ -12,6 +12,7 @@ import glob
 
 class Parser(object):
     def __init__(self, filePath):
+        self.fileName = filePath
         self.f = open(filePath, 'r')
         self.currentLine = None
         self.command = None
@@ -67,13 +68,14 @@ class Parser(object):
 
 
 class CodeWriter(object):
-    def __init__(self, filePath, isdir):
+    def __init__(self, filePath, numOfFiles):
         self.f = open(filePath, 'w')
         self.labelNum = 0
-        self.staticName = filePath.rstrip('.asm').split('/')[-1]
-        self.isdir = isdir
-        if self.isdir:
+        if numOfFiles > 1:
             self.writeBootstrap()
+
+    def setStaticName(self, filePath):
+        self.staticName = filePath.rstrip('.asm').split('/')[-1]
 
     def writeArithmetic(self, command):
         '''
@@ -169,6 +171,27 @@ class CodeWriter(object):
         self.f.write("// {}\n".format((' ').join(['CALL',
                      functionName, numArgs])))
     
+    def writeLabel(self, label):
+        '''
+        Write assembly code that effects the label command
+        '''
+        self.f.write("// {}\n".format((' ').join(['LABEL', label])))      
+        self.f.write('({})\n'.format(label))
+       
+    def writeGoTo(self, label):
+        '''
+        Write assembly code that effects the goto command
+        '''
+        self.f.write("// {}\n".format((' ').join(['GOTO', label])))
+        self.f.write('@{}\n0;JMP\n'.format(label))
+        
+    def writeIf(self, label):
+        '''
+        Writes assembly code that effects the if-goto command
+        '''
+        self.f.write("// {}\n".format((' ').join(['IF-GOTO', label])))
+        self.f.write("@SP\nM=M-1\nA=M\nD=M\n@{}\nD;JNE\n".format(label))
+    
     def writeBootstrap(self):
         self.f.write('@256\nD=A\n@SP\nM=D\n')
         self.writeCall('Sys.init', '0')
@@ -179,9 +202,7 @@ class CodeWriter(object):
 class VMTranslator(object):
     def __init__(self, VMFilePath):
         self.parsers = []
-        self.isdir = False
         if os.path.isdir(VMFilePath):
-            self.isdir = True
             os.chdir(VMFilePath)
             for f in glob.glob('./*.vm'):
                 self.parsers.append(Parser(f))
@@ -190,13 +211,14 @@ class VMTranslator(object):
         else:
             self.parsers.append(Parser(VMFilePath)) 
             self.assemblyFilePath = VMFilePath.rstrip('vm') + 'asm'
-        self.codeWriter = CodeWriter(self.assemblyFilePath, self.isdir)
+        self.codeWriter = CodeWriter(self.assemblyFilePath, len(self.parsers))
 
     def translate(self):
         '''
         Translate from VM code to assembly code
         '''
         for parser in self.parsers:
+            self.codeWriter.setStaticName(parser.fileName)
             while parser.advance():
                 if parser.commandType() == 'ARITHMETIC':
                     self.codeWriter.writeArithmetic(parser.arg1())
@@ -204,6 +226,12 @@ class VMTranslator(object):
                     self.codeWriter.writePushPop(parser.command[0].upper(),
                                                  parser.arg1(),
                                                  parser.arg2())
+                elif parser.commandType() == 'LABEL':
+                    self.codeWriter.writeLabel(parser.arg1())
+                elif parser.commandType() == 'GOTO':
+                    self.codeWriter.writeGoTo(parser.arg1())
+                elif parser.commandType() == 'IF-GOTO':
+                    self.codeWriter.writeIf(parser.arg1())
             parser.close()
         self.codeWriter.close()
 

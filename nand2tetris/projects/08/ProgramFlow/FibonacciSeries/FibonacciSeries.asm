@@ -1,0 +1,255 @@
+// PUSH ARGUMENT 1
+@1
+D=A
+@ARG
+D=D+M
+A=D
+D=M
+@SP
+A=M
+M=D
+@SP
+M=M+1
+// POP POINTER 1
+@SP
+M=M-1
+A=M
+D=M
+@THAT
+M=D
+// PUSH CONSTANT 0
+@0
+D=A
+@SP
+A=M
+M=D
+@SP
+M=M+1
+// POP THAT 0
+@0
+D=A
+@THAT
+D=D+M
+@R13
+M=D
+@SP
+M=M-1
+A=M
+D=M
+@R13
+A=M
+M=D
+// PUSH CONSTANT 1
+@1
+D=A
+@SP
+A=M
+M=D
+@SP
+M=M+1
+// POP THAT 1
+@1
+D=A
+@THAT
+D=D+M
+@R13
+M=D
+@SP
+M=M-1
+A=M
+D=M
+@R13
+A=M
+M=D
+// PUSH ARGUMENT 0
+@0
+D=A
+@ARG
+D=D+M
+A=D
+D=M
+@SP
+A=M
+M=D
+@SP
+M=M+1
+// PUSH CONSTANT 2
+@2
+D=A
+@SP
+A=M
+M=D
+@SP
+M=M+1
+// SUB
+@SP
+M=M-1
+A=M
+D=M
+@SP
+A=M-1
+M=M-D
+// POP ARGUMENT 0
+@0
+D=A
+@ARG
+D=D+M
+@R13
+M=D
+@SP
+M=M-1
+A=M
+D=M
+@R13
+A=M
+M=D
+// LABEL MAIN_LOOP_START
+(MAIN_LOOP_START)
+// PUSH ARGUMENT 0
+@0
+D=A
+@ARG
+D=D+M
+A=D
+D=M
+@SP
+A=M
+M=D
+@SP
+M=M+1
+// IF-GOTO COMPUTE_ELEMENT
+@SP
+M=M-1
+A=M
+D=M
+@COMPUTE_ELEMENT
+D;JNE
+// GOTO END_PROGRAM
+@END_PROGRAM
+0;JMP
+// LABEL COMPUTE_ELEMENT
+(COMPUTE_ELEMENT)
+// PUSH THAT 0
+@0
+D=A
+@THAT
+D=D+M
+A=D
+D=M
+@SP
+A=M
+M=D
+@SP
+M=M+1
+// PUSH THAT 1
+@1
+D=A
+@THAT
+D=D+M
+A=D
+D=M
+@SP
+A=M
+M=D
+@SP
+M=M+1
+// ADD
+@SP
+M=M-1
+A=M
+D=M
+@SP
+A=M-1
+M=D+M
+// POP THAT 2
+@2
+D=A
+@THAT
+D=D+M
+@R13
+M=D
+@SP
+M=M-1
+A=M
+D=M
+@R13
+A=M
+M=D
+// PUSH POINTER 1
+@THAT
+D=M
+@SP
+A=M
+M=D
+@SP
+M=M+1
+// PUSH CONSTANT 1
+@1
+D=A
+@SP
+A=M
+M=D
+@SP
+M=M+1
+// ADD
+@SP
+M=M-1
+A=M
+D=M
+@SP
+A=M-1
+M=D+M
+// POP POINTER 1
+@SP
+M=M-1
+A=M
+D=M
+@THAT
+M=D
+// PUSH ARGUMENT 0
+@0
+D=A
+@ARG
+D=D+M
+A=D
+D=M
+@SP
+A=M
+M=D
+@SP
+M=M+1
+// PUSH CONSTANT 1
+@1
+D=A
+@SP
+A=M
+M=D
+@SP
+M=M+1
+// SUB
+@SP
+M=M-1
+A=M
+D=M
+@SP
+A=M-1
+M=M-D
+// POP ARGUMENT 0
+@0
+D=A
+@ARG
+D=D+M
+@R13
+M=D
+@SP
+M=M-1
+A=M
+D=M
+@R13
+A=M
+M=D
+// GOTO MAIN_LOOP_START
+@MAIN_LOOP_START
+0;JMP
+// LABEL END_PROGRAM
+(END_PROGRAM)

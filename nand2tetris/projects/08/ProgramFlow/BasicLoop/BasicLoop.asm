@@ -1,0 +1,143 @@
+// PUSH CONSTANT 0
+@0
+D=A
+@SP
+A=M
+M=D
+@SP
+M=M+1
+// POP LOCAL 0
+@0
+D=A
+@LCL
+D=D+M
+@R13
+M=D
+@SP
+M=M-1
+A=M
+D=M
+@R13
+A=M
+M=D
+// LABEL LOOP_START
+(LOOP_START)
+// PUSH ARGUMENT 0
+@0
+D=A
+@ARG
+D=D+M
+A=D
+D=M
+@SP
+A=M
+M=D
+@SP
+M=M+1
+// PUSH LOCAL 0
+@0
+D=A
+@LCL
+D=D+M
+A=D
+D=M
+@SP
+A=M
+M=D
+@SP
+M=M+1
+// ADD
+@SP
+M=M-1
+A=M
+D=M
+@SP
+A=M-1
+M=D+M
+// POP LOCAL 0	
+@0	
+D=A
+@LCL
+D=D+M
+@R13
+M=D
+@SP
+M=M-1
+A=M
+D=M
+@R13
+A=M
+M=D
+// PUSH ARGUMENT 0
+@0
+D=A
+@ARG
+D=D+M
+A=D
+D=M
+@SP
+A=M
+M=D
+@SP
+M=M+1
+// PUSH CONSTANT 1
+@1
+D=A
+@SP
+A=M
+M=D
+@SP
+M=M+1
+// SUB
+@SP
+M=M-1
+A=M
+D=M
+@SP
+A=M-1
+M=M-D
+// POP ARGUMENT 0
+@0
+D=A
+@ARG
+D=D+M
+@R13
+M=D
+@SP
+M=M-1
+A=M
+D=M
+@R13
+A=M
+M=D
+// PUSH ARGUMENT 0
+@0
+D=A
+@ARG
+D=D+M
+A=D
+D=M
+@SP
+A=M
+M=D
+@SP
+M=M+1
+// IF-GOTO LOOP_START
+@SP
+M=M-1
+A=M
+D=M
+@LOOP_START
+D;JNE
+// PUSH LOCAL 0
+@0
+D=A
+@LCL
+D=D+M
+A=D
+D=M
+@SP
+A=M
+M=D
+@SP
+M=M+1
