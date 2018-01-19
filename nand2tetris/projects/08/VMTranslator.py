@@ -24,7 +24,7 @@ class Parser(object):
     def advance(self):
         if self.hasMoreCommands():
             self.command = self.currentLine.strip(
-                ' \r\t\n').split('//', 1)[0].split(' ')
+                ' \r\t\n').split('//', 1)[0].rstrip(' ').split(' ')
             if self.command[0] == '':
                 self.advance()
             return True
@@ -77,7 +77,7 @@ class CodeWriter(object):
             self.writeBootstrap()
 
     def setStaticName(self, filePath):
-        self.staticName = filePath.rstrip('.asm').split('/')[-1]
+        self.staticName = filePath.rstrip('.vm').split('/')[-1]
 
     def writeArithmetic(self, command):
         '''
@@ -232,8 +232,6 @@ class CodeWriter(object):
         writes assembly code that effects return command
         '''
         self.f.write("// RETURN\n")
-        # Change back functionLabel
-        self.functionLabel = ''
         # Frame = lcl
         self.f.write('@LCL\nD=M\n@FRAME\nM=D\n')
         # Put return address in temp var
@@ -249,7 +247,7 @@ class CodeWriter(object):
         
     def writeBootstrap(self):
         self.f.write('@256\nD=A\n@SP\nM=D\n')
-        self.writeCall('Sys.init', '0')
+        self.writeCall('SYS.INIT', '0')
                 
     def close(self):
         self.f.close()
@@ -298,6 +296,6 @@ class VMTranslator(object):
 
 
 
-#VMFilePath = sys.argv[1]
-#vm = VMTranslator(VMFilePath)
-#vm.translate()
+VMFilePath = sys.argv[1]
+vm = VMTranslator(VMFilePath)
+vm.translate()
