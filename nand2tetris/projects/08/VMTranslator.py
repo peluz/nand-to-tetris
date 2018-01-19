@@ -33,8 +33,8 @@ class Parser(object):
 
     def commandType(self):
         if len(self.command) == 1:
-            if self.command == 'RETURN':
-                return self.command
+            if self.command[0] == 'return':
+                return 'RETURN'
             else:
                 return 'ARITHMETIC'
         else:
@@ -71,6 +71,8 @@ class CodeWriter(object):
     def __init__(self, filePath, numOfFiles):
         self.f = open(filePath, 'w')
         self.labelNum = 0
+        self.returnNum = 0
+        self.functionLabel = ''
         if numOfFiles > 1:
             self.writeBootstrap()
 
@@ -170,13 +172,27 @@ class CodeWriter(object):
         '''
         self.f.write("// {}\n".format((' ').join(['CALL',
                      functionName, numArgs])))
+        # push return address
+        self.f.write('@Return{}\nD=M\n@SP\nM=M+1\nA=M-1\nM=D\n'.format(self.returnNum))
+        # push lcl, arg, this and that
+        for segment in ['LCL', 'ARG', 'THIS', 'THAT']:
+            self.f.write('@{}\nD=M\n@SP\nA=M\nM=D\n@SP\nM=M+1\n'.format(segment))
+        # ARG = SP-n-5
+        self.f.write('@{}\nD=A\n@5\nD=D-A\n@SP\nD=M-D\n@ARG\nM=D\n'.format(numArgs))
+        # LCL = SP
+        self.f.write("@SP\nD=M\n@LCL\nM=D\n")
+        # GOTO F
+        self.writeGoTo(functionName)
+        # Declare Label for return address
+        self.writeLabel("Return" + str(self.returnNum))
+        # Increment return address
+        self.returnNum += 1
     
     def writeLabel(self, label):
         '''
         Write assembly code that effects the label command
-        '''
-        self.f.write("// {}\n".format((' ').join(['LABEL', label])))      
-        self.f.write('({})\n'.format(label))
+        '''    
+        self.f.write('({}{})\n'.format(self.functionLabel, label))
        
     def writeGoTo(self, label):
         '''
@@ -192,6 +208,42 @@ class CodeWriter(object):
         self.f.write("// {}\n".format((' ').join(['IF-GOTO', label])))
         self.f.write("@SP\nM=M-1\nA=M\nD=M\n@{}\nD;JNE\n".format(label))
     
+    def writeFunction(self, functionName, numLocals):
+        '''
+        writes assembly code that effects Function command
+        '''
+        self.f.write("// {}\n".format((' ').join(['FUNCTION', functionName,
+                     numLocals])))
+        # Declare Label
+        self.writeLabel(functionName)
+        # Change functionLabel
+        self.functionLabel = functionName + '$'
+        # Push 0
+        for i in range(int(numLocals)):
+            self.f.write('@SP\nA=M\nM=0\n@SP\nM=M+1\n')
+        
+        
+    
+    def writeReturn(self):
+        '''
+        writes assembly code that effects return command
+        '''
+        self.f.write("// RETURN\n")
+        # Change back functionLabel
+        self.functionLabel = ''
+        # Frame = lcl
+        self.f.write('@LCL\nD=M\n@FRAME\nM=D\n')
+        # Put return address in temp var
+        self.f.write('@5\nD=A\n@FRAME\nD=M-D\nA=D\nD=M\n@RET\nM=D\n')
+        # Reposition return value for the caller
+        self.f.write('@SP\nAM=M-1\nD=M\n@ARG\nA=M\nM=D\n')
+        # Restore state of caller
+        self.f.write('@ARG\nD=M+1\n@SP\nM=D\n')
+        for segment in ['THAT', 'THIS', 'ARG', 'LCL']:
+            self.f.write('@FRAME\nM=M-1\nA=M\nD=M\n@{}\nM=D\n'.format(segment))
+        # goto return address
+        self.f.write('@RET\nA=M\n0;JMP\n')
+        
     def writeBootstrap(self):
         self.f.write('@256\nD=A\n@SP\nM=D\n')
         self.writeCall('Sys.init', '0')
@@ -232,7 +284,13 @@ class VMTranslator(object):
                     self.codeWriter.writeGoTo(parser.arg1())
                 elif parser.commandType() == 'IF-GOTO':
                     self.codeWriter.writeIf(parser.arg1())
-            parser.close()
+                elif parser.commandType() == 'CALL':
+                    self.codeWriter.writeCall(parser.arg1(), parser.arg2())
+                elif parser.commandType() == 'RETURN':
+                    self.codeWriter.writeReturn()
+                elif parser.commandType() == 'FUNCTION':
+                    self.codeWriter.writeFunction(parser.arg1(), parser.arg2())
+                    
         self.codeWriter.close()
 
 
