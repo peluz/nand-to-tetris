@@ -1,0 +1,16 @@
+/** Initializes a new Tic-tac-toe game and starts running it. */
+class Main {
+    function void main() {
+    	var TicTacToe game;
+   		while (true) {
+	        let game = TicTacToe.new();
+	        do game.run();
+	        do game.dispose();
+	        do Output.println();
+	        do Output.printString("Press any key to play again.");
+	    	do Keyboard.readChar();
+   		}
+  	
+        return;
+    }
+}

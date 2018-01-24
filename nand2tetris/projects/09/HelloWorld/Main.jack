@@ -7,8 +7,14 @@
 class Main {
    function void main() {
       /* Prints some text using the standard library. */
+      var int a;
+      let a = 0;
+      while (true) {
       do Output.printString("Hello world!");
+      do Output.printInt(a);
+      let a = a + 1;
       do Output.println();      // New line
+	}
       return;
    }
 }
