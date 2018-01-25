@@ -10,7 +10,8 @@
  class TicTacToe {
  	field Board board;
  	field Array state;
- 	field int currentPlayer, numOfMoves, firstPlayer;
+ 	field int currentPlayer, firstPlayer;
+ 	field AI ai;
 
  	/** 
  	 * Constructs new tic-tac-toe game 
@@ -21,6 +22,7 @@
  		var boolean error; 	
 		let i = 0;
 		let state = Array.new(9);
+		let ai = AI.new(this);
 		// clear the screen
 		do clearScreen();
 
@@ -33,11 +35,13 @@
 		let error = true;
 		while (error) {
 			let currentPlayer = Keyboard.readInt("Choose who will start (1 for human, -1 for computer): ");
-			if (currentPlayer = -1 | 1) {
+			if (currentPlayer = -1) {
+				let error = false;
+			}
+			if (currentPlayer = 1) {
 				let error = false;
 			}
 		}
- 		let numOfMoves = 0;
  		let firstPlayer = currentPlayer;
  		do draw();
  		do Output.printString("Computer: You'll never beat me!");
@@ -49,6 +53,7 @@
  	/** Disposes this game */
  	method void dispose() {
  		do state.dispose();
+ 		do ai.dispose();
  		do Memory.deAlloc(this);
  		return;
  	}
@@ -79,9 +84,8 @@
 
  	/** Runs the game until it finishes */
  	method void run() { 	
- 		while (finished() = 2) {
+ 		while (ai.finished(state) = 2) {
  			do changeState();
- 			let numOfMoves = numOfMoves + 1;
  			let currentPlayer = currentPlayer * -1;
  			do draw();
  		}
@@ -89,7 +93,7 @@
  		do Output.printString("Game over!");
  		do Output.println();
 
- 		if (finished() = 0) {
+ 		if (ai.finished(state) = 0) {
  			do Output.printString("It's a draw!");
  			do Output.println();
  			do Output.printString("Computer: That's the best possible outcome for you...");
@@ -98,7 +102,7 @@
  			if (currentPlayer = -1) {
  				do Output.printString("Computer lost!");
  				do Output.println();
- 				do Output.printString("Computer: Impossible!!!!");
+ 				do Output.printString("Computer: Impossible!!!! (Literally!)");
  			}
  			else {
  				do Output.printString("Human lost!");
@@ -117,24 +121,23 @@
  		let error = true;
 
  		if (currentPlayer = 1) {
- 		 do Output.printString("It's Human's Turn");
- 		 do Output.println();
+	 		do Output.printString("It's Human's Turn");
+	 		do Output.println();
+	 		while (error) {
+	 			let move = Keyboard.readInt("Choose index of move (0 - 8): ");
+	 			if (move > 0 & move < 9 & state[move] = 95 ) {
+	 				let error = false;
+	 			}
+	 		}
  		}
  		else {
  			do Output.printString("Computer: It's my turn! Watch me!");
  		 	do Output.println();
- 		 	do Sys.wait(1000);
  		 	do Output.printString("Computer: Let me think...");
  		 	do Output.println();
- 		 	do Sys.wait(500);
+ 		 	let move = ai.alphaBetaSearch(state);
  		}
 
- 		while (error) {
- 			let move = Keyboard.readInt("Choose index of move (0 - 8): ");
- 			if (move > 0 & move < 9 & state[move] = 95 ) {
- 				let error = false;
- 			}
- 		}
  		if (firstPlayer = currentPlayer) {
  			let state[move] = 88; // unicode for X
  		}
@@ -144,57 +147,14 @@
  		return;
  	}
 
- 	/** Checks if game is finished and returns victorious player, 0 for draws, 2 for not finished*/
- 	method int finished() {
-
- 		if (checkRows() | checkCollums() | checkDiagonals()) {
- 			return currentPlayer;
- 		}
-
- 		if (numOfMoves = 9) {
- 			return 0;
- 		}
-
- 		return 2;
+ 	/** Gets currentPlayer */
+ 	method int currentPlayer() {
+ 		return currentPlayer;
  	}
 
- 	/** Check for equals in rows */
- 	method boolean checkRows() {
- 		var int i;
- 		let i = 0;
-
- 		while (i < 3) {
- 			if(state[3*i] = state[(3*i)+1] & state[3*i] = state[(3*i) + 2] & ~(state[3*i] = 95)) {
- 				return true;
- 			}
- 			let i = i + 1;
- 		}
- 		return false;
- 	}
-
- 	/** Check for equals in collumns */
- 	method boolean checkCollums() {
- 		var int i;
- 		let i = 0;
- 		while (i < 3) {
- 			if (state[i] = state[i + 3] & state[i] = state[i + 6] & ~(state[i] = 95)) {
- 				return true;
- 			}
- 			let i = i + 1;
- 		}
- 		return false;
- 	}
-
- 	/** Check for equals in diagonals */
- 	method boolean checkDiagonals() {
- 		if (state[0] = state[4] & state[0] = state[8] & ~(state[0] = 95)) {
- 			return true;
- 		}
-
- 		if (state[2] = state[4] & state[2] = state[6] & ~(state[2] = 95)) {
- 			return true;
- 		}
- 		return false;
+ 	/** Gets firstPlayer */
+ 	method int firstPlayer() {
+ 		return firstPlayer;
  	}
 
  	/** Clears screen */
