@@ -24,6 +24,19 @@
  		var int v, i, bestScore, beta, bestAction; 
  		var Array result;
 
+ 		if (currentGame.numOfMoves() = 0) { // if no moves yet pick the upper right spot
+ 			return 2;
+ 		}
+
+ 		if (currentGame.numOfMoves() = 1) { /* if oponent made one move, pick center if possible, 
+ 		                                     else, upper right */
+ 			if (state[4] = 95) {
+ 				return 4;
+ 			}
+
+ 			return 2;
+ 		}
+
  		let bestScore = -10;
  		let beta = 10;
  		let bestAction = -1;
@@ -32,9 +45,7 @@
  		while (i < 9) {
  			if (state[i] = 95) {
  				let result = result(state, i, -1);
- 				let v = minValue(result, bestScore, beta);
- 				do Output.printInt(v);
- 				do Output.printString(" ");
+ 				let v = minValue(result, bestScore, beta, currentGame.numOfMoves() + 1);
  				do result.dispose();
  				if (v > bestScore) {
  					let bestScore = v;
@@ -43,16 +54,16 @@
  			}
  			let i = i + 1;
  		}
- 		do Keyboard.readChar();
+
  		return bestAction;
  	}
 
  	/** Returns max value of a state */
- 	method int maxValue(Array state, int alpha, int beta) {
+ 	method int maxValue(Array state, int alpha, int beta, int depth) {
  		var int v, i, utility;
  		var Array result;
 
- 		let utility = finished(state) * -1;
+ 		let utility = finished(state, depth) * -1;
 
  		if (utility > -2) {
  			return utility;
@@ -64,7 +75,7 @@
  		while (i < 9) {
  			if (state[i] = 95) {
  				let result = result(state, i, -1);
- 				let v = Math.max(v, minValue(result, alpha, beta));
+ 				let v = Math.max(v, minValue(result, alpha, beta, depth + 1));
  				do result.dispose();
  				if (v > beta) {
  					return v;
@@ -81,11 +92,11 @@
  	}
 
  	/** Returns min value of a state */
- 	method int minValue(Array state, int alpha, int beta) {
+ 	method int minValue(Array state, int alpha, int beta, int depth) {
  		var int v, i, utility;
  		var Array result;
 
- 		let utility = finished(state) * -1;
+ 		let utility = finished(state, depth) * -1;
 
  		if (utility > -2) {
  			return utility;
@@ -97,7 +108,7 @@
  		while (i < 9) {
  			if (state[i] = 95) {
  				let result = result(state, i, 1);
- 				let v = Math.min(v, maxValue(result, alpha, beta));
+ 				let v = Math.min(v, maxValue(result, alpha, beta, depth + 1));
  				do result.dispose();
  				if (v < alpha) {
  					return v;
@@ -140,8 +151,8 @@
  	}
 
  	/** Checks if game is finished and returns victorious player, 0 for draws, 2 for not finished*/
- 	method int finished(Array state) {
- 		var int winnerSymbol, i, numOfMoves;
+ 	method int finished(Array state, int numOfMoves) {
+ 		var int winnerSymbol;
  		let winnerSymbol = ((checkRows(state) | checkCollums(state)) | checkDiagonals(state));
 
  		if (~(winnerSymbol = 0)) {
@@ -162,16 +173,6 @@
  				}
  			}
  		}
-
- 		let i = 0;
- 		let numOfMoves = 0;
- 		while (i < 9) {
- 			if (~(state[i] = 95)) {
- 				let numOfMoves = numOfMoves + 1;
- 			}
- 			let i = i + 1;
- 		}
-
 
  		if (numOfMoves = 9) {
  			return 0;

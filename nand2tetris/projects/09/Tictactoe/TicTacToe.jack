@@ -10,7 +10,7 @@
  class TicTacToe {
  	field Board board;
  	field Array state;
- 	field int currentPlayer, firstPlayer;
+ 	field int currentPlayer, firstPlayer, numOfMoves;
  	field AI ai;
 
  	/** 
@@ -21,6 +21,7 @@
  		var int i;
  		var boolean error; 	
 		let i = 0;
+		let numOfMoves = 0;
 		let state = Array.new(9);
 		let ai = AI.new(this);
 		// clear the screen
@@ -84,8 +85,9 @@
 
  	/** Runs the game until it finishes */
  	method void run() { 	
- 		while (ai.finished(state) = 2) {
+ 		while (ai.finished(state, numOfMoves) = 2) {
  			do changeState();
+ 			let numOfMoves = numOfMoves + 1;
  			let currentPlayer = currentPlayer * -1;
  			do draw();
  		}
@@ -93,7 +95,7 @@
  		do Output.printString("Game over!");
  		do Output.println();
 
- 		if (ai.finished(state) = 0) {
+ 		if (ai.finished(state, numOfMoves) = 0) {
  			do Output.printString("It's a draw!");
  			do Output.println();
  			do Output.printString("Computer: That's the best possible outcome for you...");
@@ -155,6 +157,11 @@
  	/** Gets firstPlayer */
  	method int firstPlayer() {
  		return firstPlayer;
+ 	}
+
+ 	/** gets numOfMoves */
+ 	method int numOfMoves() {
+ 		return numOfMoves;
  	}
 
  	/** Clears screen */

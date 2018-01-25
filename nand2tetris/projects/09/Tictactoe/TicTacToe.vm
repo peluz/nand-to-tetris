@@ -1,15 +1,17 @@
 function TicTacToe.new 2
-push constant 5
+push constant 6
 call Memory.alloc 1
 pop pointer 0
 push constant 0
 pop local 0
+push constant 0
+pop this 4
 push constant 9
 call Array.new 1
 pop this 1
 push pointer 0
 call AI.new 1
-pop this 4
+pop this 5
 push pointer 0
 call TicTacToe.clearScreen 1
 pop temp 0
@@ -254,7 +256,7 @@ pop pointer 0
 push this 1
 call Array.dispose 1
 pop temp 0
-push this 4
+push this 5
 call AI.dispose 1
 pop temp 0
 push pointer 0
@@ -324,9 +326,10 @@ function TicTacToe.run 0
 push argument 0
 pop pointer 0
 label WHILE_EXP0
-push this 4
+push this 5
 push this 1
-call AI.finished 2
+push this 4
+call AI.finished 3
 push constant 2
 eq
 not
@@ -334,6 +337,10 @@ if-goto WHILE_END0
 push pointer 0
 call TicTacToe.changeState 1
 pop temp 0
+push this 4
+push constant 1
+add
+pop this 4
 push this 2
 push constant 1
 neg
@@ -370,9 +377,10 @@ call Output.printString 1
 pop temp 0
 call Output.println 0
 pop temp 0
-push this 4
+push this 5
 push this 1
-call AI.finished 2
+push this 4
+call AI.finished 3
 push constant 0
 eq
 if-goto IF_TRUE0
@@ -1014,7 +1022,7 @@ call Output.printString 1
 pop temp 0
 call Output.println 0
 pop temp 0
-push this 4
+push this 5
 push this 1
 call AI.alphaBetaSearch 2
 pop local 0
@@ -1055,6 +1063,11 @@ function TicTacToe.firstPlayer 0
 push argument 0
 pop pointer 0
 push this 3
+return
+function TicTacToe.numOfMoves 0
+push argument 0
+pop pointer 0
+push this 4
 return
 function TicTacToe.clearScreen 0
 push argument 0
