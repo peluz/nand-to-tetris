@@ -97,4 +97,50 @@ class JackTokenizer(object):
             out.write("<{}> {} </{}>\n".format(tokenType, token.strip('"'), tokenType))
         out.write("</tokens>")
         out.close()
+     
+        
+class CompilationEngine(object):
+    def __init__(self, inputFile, outputFile):
+        self.input = inputFile
+        self.output = outputFile
+        
+    def compileClass(self):
+        pass
+    
+    def compileClassVarDec(self):
+        pass
+    
+    def compileSubRoutine(self):
+        pass
+    
+    def compileParameterList(self):
+        pass
+    
+    def compileVarDec(self):
+        pass
+    
+    def compileStatements(self):
+        pass
+    
+    def compileDo(self):
+        pass
+    
+    def compileLet(self):
+        pass
+    
+    def compileWhile(self):
+        pass
+    
+    def compileIf(self):
+        pass
+    
+    def compileExpression(self):
+        pass
+    
+    def compileTerm(self):
+        pass
+    
+    def compileExpressionList(self):
+        pass
+        
         
