@@ -129,7 +129,7 @@ class CompilationEngine(object):
         self.currentTokenType = self.tokenizer.tokenType(self.currentToken)
     
     def printLine(self):
-        self.output.write("<{}> {} </{}>".format(self.currentTokenType,
+        self.output.write("<{}> {} </{}>\n".format(self.currentTokenType,
                           self.currentToken, self.currentTokenType))
     
     def compileJack(self):
@@ -144,19 +144,64 @@ class CompilationEngine(object):
         self.updateToken()
         assert self.currentToken == '{'
         self.printLine()
-        token = 'static'
-        while token in ['static', 'field', 'constructor', 'function', 'method']:
+        self.currentToken = 'static'
+        while self.currentToken in ['static', 'field', 'constructor', 'function', 'method']:
             self.updateToken()
             self.tokenToFunction[self.currentToken]
+            self.updateToken()
         assert self.currentToken == '}'
         self.printLine()
         self.output.write("</class>\n")
     
     def compileClassVarDec(self):
-        pass
+        assert self.currentToken in ['static', 'field']
+        self.output.write("<classVarDec>\n")
+        self.printLine()
+        self.updateToken()
+        self.printLine() 
+        self.updateToken()
+        self.printLine()
+        self.updateToken()
+        while self.currentToken == ',':
+            self.printLine()
+            self.updateToken()
+            self.printLine()
+            self.updateToken()
+        assert self.currentToken == ';'
+        self.printLine()
+        self.output.write("</classVarDec>\n")
     
     def compileSubRoutine(self):
-        pass
+        assert self.currentToken in ['constructor', 'method', 'function']
+        self.output.write("<subroutineDec>\n")
+        self.printLine()
+        self.updateToken()
+        self.printLine()
+        self.updateToken()
+        self.printLine()
+        self.updateToken()
+        assert self.currentToken == '('
+        self.printLine()
+        self.updateToken()
+        self.compileParameterList()
+        self.updateToken()
+        assert self.currentToken == ')'
+        self.printLine()
+        self.output.write("<subroutineBody>\n")
+        self.updateToken()
+        assert self.currentToken == '{'
+        self.printLine()
+        self.updateToken()
+        while self.currentToken != '}':
+            if self.currentToken == 'var':
+                self.compileVarDec()
+            else:
+                self.compileStatements()
+            self.updateToken()
+        assert self.currentToken == '}'
+        self.printLine()
+        self.output.write("</subroutineBody>\n")
+        self.output.write("</subroutineDec>\n")
     
     def compileParameterList(self):
         pass
