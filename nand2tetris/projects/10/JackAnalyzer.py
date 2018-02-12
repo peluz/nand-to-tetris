@@ -5,9 +5,8 @@ import sys
 
 
 class JackTokenizer(object):
-    def __init__(self, inputFile, outputFile):
+    def __init__(self, inputFile):
         self.input = inputFile
-        self.output = outputFile
         self.tokens = []
         self.symbols = ['{', '}', '(', ')', '[', ']', '.', ',', ';', '+',
                          '-', '*', '/', '&', '|', '<', '>', '=', '~', '"']
@@ -87,7 +86,7 @@ class JackTokenizer(object):
             return 'identifier'
         
     def printTokens(self):
-        out = open(self.output, "w")
+        out = open("output.xml", "w")
         out.write("<tokens>\n")
         while self.hasMoreTokens():
             token = self.advance()
@@ -108,20 +107,20 @@ class CompilationEngine(object):
     def __init__(self, tokenizer, outputFile):
         self.tokenizer = tokenizer
         self.output = outputFile
-        self.currentToken = None
-        self.currentTokenType = None
-        self.tokenToFunction = {'class': self.compileClass(),
-                               'static': self.compileClassVarDec(),
-                               'field': self.compileClassVarDec(),
-                               'constructor': self.compileSubRoutine(),
-                               'function': self.compileSubRoutine(),
-                               'method': self.compileSubRoutine(),
-                               'var': self.compileVarDec(),
-                               'let': self.compileLet(),
-                               'if': self.compileIf(),
-                               'while': self.compileWhile(),
-                               'do': self.compileDo(),
-                               'return': self.compileReturn()
+        self.currentToken = ""
+        self.currentTokenType = ""
+        self.tokenToFunction = {'class': self.compileClass,
+                               'static': self.compileClassVarDec,
+                               'field': self.compileClassVarDec,
+                               'constructor': self.compileSubRoutine,
+                               'function': self.compileSubRoutine,
+                               'method': self.compileSubRoutine,
+                               'var': self.compileVarDec,
+                               'let': self.compileLet,
+                               'if': self.compileIf,
+                               'while': self.compileWhile,
+                               'do': self.compileDo,
+                               'return': self.compileReturn
                                }
         
     def updateToken(self):
@@ -147,7 +146,7 @@ class CompilationEngine(object):
         self.currentToken = 'static'
         while self.currentToken in ['static', 'field', 'constructor', 'function', 'method']:
             self.updateToken()
-            self.tokenToFunction[self.currentToken]
+            self.tokenToFunction[self.currentToken]()
             self.updateToken()
         assert self.currentToken == '}'
         self.printLine()
@@ -252,12 +251,11 @@ class JackAnalyzer(object):
         '''
         for f in self.files:
             inputFile = open(f, 'r')
-            outputFile = f.rstrip('.jack') + 'T.xml'
-            tokenizer = JackTokenizer(inputFile, outputFile)
-            outputFile = f.rstrip('T.xml') + '.xml'
+            tokenizer = JackTokenizer(inputFile)
+            outputFile = f.rstrip('.jack') + '.xml'
             output = open(outputFile, 'w')
             engine = CompilationEngine(tokenizer, output)
-            engine.compile()
+            engine.compileJack()
             inputFile.close()
             output.close()
 
