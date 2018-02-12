@@ -1,8 +1,13 @@
 # -*- coding: utf-8 -*-
+import os
+import glob
+import sys
+
 
 class JackTokenizer(object):
-    def __init__(self, inputFile):
+    def __init__(self, inputFile, outputFile):
         self.input = inputFile
+        self.output = outputFile
         self.tokens = []
         self.symbols = ['{', '}', '(', ')', '[', ']', '.', ',', ';', '+',
                          '-', '*', '/', '&', '|', '<', '>', '=', '~', '"']
@@ -82,7 +87,7 @@ class JackTokenizer(object):
             return 'identifier'
         
     def printTokens(self):
-        out = open("output.xml", "w")
+        out = open(self.output, "w")
         out.write("<tokens>\n")
         while self.hasMoreTokens():
             token = self.advance()
@@ -100,12 +105,52 @@ class JackTokenizer(object):
      
         
 class CompilationEngine(object):
-    def __init__(self, inputFile, outputFile):
-        self.input = inputFile
+    def __init__(self, tokenizer, outputFile):
+        self.tokenizer = tokenizer
         self.output = outputFile
+        self.currentToken = None
+        self.currentTokenType = None
+        self.tokenToFunction = {'class': self.compileClass(),
+                               'static': self.compileClassVarDec(),
+                               'field': self.compileClassVarDec(),
+                               'constructor': self.compileSubRoutine(),
+                               'function': self.compileSubRoutine(),
+                               'method': self.compileSubRoutine(),
+                               'var': self.compileVarDec(),
+                               'let': self.compileLet(),
+                               'if': self.compileIf(),
+                               'while': self.compileWhile(),
+                               'do': self.compileDo(),
+                               'return': self.compileReturn()
+                               }
+        
+    def updateToken(self):
+        self.currentToken = self.tokenizer.advance()
+        self.currentTokenType = self.tokenizer.tokenType(self.currentToken)
+    
+    def printLine(self):
+        self.output.write("<{}> {} </{}>".format(self.currentTokenType,
+                          self.currentToken, self.currentTokenType))
+    
+    def compileJack(self):
+        self.updateToken()
+        assert self.currentToken == 'class'
+        self.compileClass()
         
     def compileClass(self):
-        pass
+        self.output.write("<class>\n<keyword> class </keyword>\n")
+        self.updateToken()
+        self.printLine()
+        self.updateToken()
+        assert self.currentToken == '{'
+        self.printLine()
+        token = 'static'
+        while token in ['static', 'field', 'constructor', 'function', 'method']:
+            self.updateToken()
+            self.tokenToFunction[self.currentToken]
+        assert self.currentToken == '}'
+        self.printLine()
+        self.output.write("</class>\n")
     
     def compileClassVarDec(self):
         pass
@@ -134,6 +179,9 @@ class CompilationEngine(object):
     def compileIf(self):
         pass
     
+    def compileReturn(self):
+        pass
+    
     def compileExpression(self):
         pass
     
@@ -143,4 +191,32 @@ class CompilationEngine(object):
     def compileExpressionList(self):
         pass
         
-        
+class JackAnalyzer(object):
+    def __init__(self, sourcePath):
+        self.files = []
+        if os.path.isdir(sourcePath):
+            os.chdir(sourcePath)
+            for f in glob.glob('./*.jack'):
+                self.files.append(f)
+        else:
+            self.files.append(sourcePath) 
+
+    def translate(self):
+        '''
+        Translate from Jack code  to xml
+        '''
+        for f in self.files:
+            inputFile = open(f, 'r')
+            outputFile = f.rstrip('.jack') + 'T.xml'
+            tokenizer = JackTokenizer(inputFile, outputFile)
+            outputFile = f.rstrip('T.xml') + '.xml'
+            output = open(outputFile, 'w')
+            engine = CompilationEngine(tokenizer, output)
+            engine.compile()
+            inputFile.close()
+            output.close()
+
+
+sourcePath = sys.argv[1]
+jack = JackAnalyzer(sourcePath)
+jack.translate()        
