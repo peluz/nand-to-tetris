@@ -177,10 +177,10 @@ class JackTokenizer(object):
      
         
 class CompilationEngine(object):
-    def __init__(self, tokenizer, symbolTable, outputFile):
+    def __init__(self, tokenizer, symbolTable, vmWriter):
         self.tokenizer = tokenizer
         self.symbolTable = symbolTable
-        self.output = outputFile
+        self.writer = vmWriter
         self.currentToken = ""
         self.currentTokenType = ""
         self.stoppers = [']', ')', ';']
@@ -223,6 +223,7 @@ class CompilationEngine(object):
         self.updateToken()
         assert self.currentToken == 'class'
         self.compileClass()
+        self.writer.close()
         
     def compileClass(self):
         self.output.write("<class>\n<keyword> class </keyword>\n")
@@ -525,14 +526,47 @@ class JackAnalyzer(object):
             inputFile = open(f, 'r')
             tokenizer = JackTokenizer(inputFile)
             symbolTable = SymbolTable()
-            outputFile = f.rstrip('.jack') + '.xml'
-            output = open(outputFile, 'w')
-            engine = CompilationEngine(tokenizer, symbolTable, output)
+            outputFile = f.rstrip('.jack') + '.vm'
+            vmWriter = VMWriter(outputFile)
+            engine = CompilationEngine(tokenizer, symbolTable, vmWriter)
             engine.compileJack()
             print(engine.symbolTable.classTable)
             inputFile.close()
-            output.close()
 
+
+class VMWriter(object):
+    def __init__(self, outputFileName):
+        self.output = open(outputFileName, 'w')
+        
+    def writePush(self,segment, index):
+        self.output.write("push {} {}\n".format(segment, index))
+        
+    def writePop(self, segment, index):
+        self.output.write("pop {} {}\n".format(segment, index))
+    
+    def writeArithmetic(self, command):
+        self.output.write("{}\n".format(command))
+    
+    def writeLabel(self, label):
+        self.output.write("label {}\n".format(label))
+        
+    def writeGoto(self, label):
+        self.output.write("goto {}\n".format(label))
+        
+    def writeIf(self, label):
+        self.output.write("if-goto {}\n".format(label))
+        
+    def writeCall(self, name, nArgs):
+        self.output.write("call {} {}\n".format(name, nArgs))
+        
+    def writeFunction(self, name, nLocals):
+        self.output.write("function {} {}\n".format(name, nLocals))
+        
+    def writeReturn(self):
+        self.output.write("return\n")
+        
+    def close(self):
+        self.output.close()
 
 sourcePath = sys.argv[1]
 jack = JackAnalyzer(sourcePath)
