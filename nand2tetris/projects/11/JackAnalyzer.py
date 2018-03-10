@@ -177,8 +177,9 @@ class JackTokenizer(object):
      
         
 class CompilationEngine(object):
-    def __init__(self, tokenizer, outputFile):
+    def __init__(self, tokenizer, symbolTable, outputFile):
         self.tokenizer = tokenizer
+        self.symbolTable = symbolTable
         self.output = outputFile
         self.currentToken = ""
         self.currentTokenType = ""
@@ -199,11 +200,12 @@ class CompilationEngine(object):
                                'do': self.compileDo,
                                'return': self.compileReturn
                                }
+        self.currentClass = None
         
     def updateToken(self):
         self.currentToken = self.tokenizer.advance()
         self.currentTokenType = self.tokenizer.tokenType(self.currentToken)
-    
+            
     def printLine(self):
         if self.currentTokenType == 'stringConstant':
             self.currentToken = self.currentToken.strip('"')
@@ -225,6 +227,7 @@ class CompilationEngine(object):
     def compileClass(self):
         self.output.write("<class>\n<keyword> class </keyword>\n")
         self.updateToken()
+        self.currentClass = self.currentToken
         self.printLine()
         self.updateToken()
         assert self.currentToken == '{'
@@ -238,16 +241,20 @@ class CompilationEngine(object):
     
     def compileClassVarDec(self):
         assert self.currentToken in ['static', 'field']
+        kind = self.currentToken
         self.output.write("<classVarDec>\n")
         self.printLine()
         self.updateToken()
+        symbolType = self.currentToken
         self.printLine() 
         self.updateToken()
+        self.symbolTable.define(self.currentToken, symbolType, kind)
         self.printLine()
         self.updateToken()
         while self.currentToken == ',':
             self.printLine()
             self.updateToken()
+            self.symbolTable.define(self.currentToken, symbolType, kind)
             self.printLine()
             self.updateToken()
         assert self.currentToken == ';'
@@ -256,7 +263,10 @@ class CompilationEngine(object):
         self.updateToken()
     
     def compileSubRoutine(self):
+        self.symbolTable.startSubroutine()
         assert self.currentToken in ['constructor', 'method', 'function']
+        if self.currentToken == 'method':
+            self.symbolTable.define("this", self.currentClass, "argument")
         self.output.write("<subroutineDec>\n")
         self.printLine()
         self.updateToken()
@@ -285,18 +295,34 @@ class CompilationEngine(object):
         self.output.write("</subroutineBody>\n")
         self.output.write("</subroutineDec>\n")
         self.updateToken()
+        print(self.symbolTable.subRoutineTable)
     
     def compileParameterList(self):
         self.output.write("<parameterList>\n")
         while self.currentToken != ')':
-            self.printLine()
-            self.updateToken()
+            if self.currentToken != ',':
+                self.printLine()
+                symbolType = self.currentToken
+                self.updateToken()
+                self.symbolTable.define(self.currentToken, symbolType, 'argument')
+                self.printLine()
+                self.updateToken()
+            else:
+                self.printLine()
+                self.updateToken()
         self.output.write("</parameterList>\n")
     
     def compileVarDec(self):
         assert self.currentToken == 'var'
         self.output.write("<varDec>\n")
+        self.printLine()
+        self.updateToken()
+        symbolType = self.currentToken
+        self.printLine()
+        self.updateToken()
         while self.currentToken != ';':
+            if self.currentToken != ',':
+                self.symbolTable.define(self.currentToken, symbolType, 'var')
             self.printLine()
             self.updateToken()
         assert self.currentToken == ';'
@@ -498,10 +524,12 @@ class JackAnalyzer(object):
         for f in self.files:
             inputFile = open(f, 'r')
             tokenizer = JackTokenizer(inputFile)
+            symbolTable = SymbolTable()
             outputFile = f.rstrip('.jack') + '.xml'
             output = open(outputFile, 'w')
-            engine = CompilationEngine(tokenizer, output)
+            engine = CompilationEngine(tokenizer, symbolTable, output)
             engine.compileJack()
+            print(engine.symbolTable.classTable)
             inputFile.close()
             output.close()
 
