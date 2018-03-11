@@ -184,7 +184,8 @@ class CompilationEngine(object):
         self.currentToken = ""
         self.currentTokenType = ""
         self.stoppers = [']', ')', ';']
-        self.ops = ['+', '-', '*', '/', '&', '|', '<', '>', '=']
+        self.ops = {'+': 'add', '-': 'sub', '*': 'multiply', '/': 'divide',
+                    '&': 'and', '|': 'or', '<': 'lt', '>': 'gt', '=': 'eq'}
         self.statements = ['let', 'while', 'do', 'return', 'if']
         self.unaryOps = ['-', '~']
         self.tokenToFunction = {'class': self.compileClass,
@@ -201,23 +202,12 @@ class CompilationEngine(object):
                                'return': self.compileReturn
                                }
         self.currentClass = None
+        self.nArgs = 0
+        self.expression = []
         
     def updateToken(self):
         self.currentToken = self.tokenizer.advance()
         self.currentTokenType = self.tokenizer.tokenType(self.currentToken)
-            
-    def printLine(self):
-        if self.currentTokenType == 'stringConstant':
-            self.currentToken = self.currentToken.strip('"')
-        elif self.currentToken in ['<', '>', '&']:
-            if self.currentToken == '<':
-                self.currentToken = '&lt;'
-            elif self.currentToken == '>':
-                self.currentToken = '&gt;'
-            elif self.currentToken == '&':
-                self.currentToken = '&amp;'
-        self.output.write("<{}> {} </{}>\n".format(self.currentTokenType,
-                          self.currentToken, self.currentTokenType))
     
     def compileJack(self):
         self.updateToken()
@@ -226,41 +216,28 @@ class CompilationEngine(object):
         self.writer.close()
         
     def compileClass(self):
-        self.output.write("<class>\n<keyword> class </keyword>\n")
         self.updateToken()
         self.currentClass = self.currentToken
-        self.printLine()
         self.updateToken()
         assert self.currentToken == '{'
-        self.printLine()
         self.updateToken()
         while self.currentToken in ['static', 'field', 'constructor', 'function', 'method']:
             self.tokenToFunction[self.currentToken]()
         assert self.currentToken == '}'
-        self.printLine()
-        self.output.write("</class>\n")
     
     def compileClassVarDec(self):
         assert self.currentToken in ['static', 'field']
         kind = self.currentToken
-        self.output.write("<classVarDec>\n")
-        self.printLine()
         self.updateToken()
         symbolType = self.currentToken
-        self.printLine() 
         self.updateToken()
         self.symbolTable.define(self.currentToken, symbolType, kind)
-        self.printLine()
         self.updateToken()
         while self.currentToken == ',':
-            self.printLine()
             self.updateToken()
             self.symbolTable.define(self.currentToken, symbolType, kind)
-            self.printLine()
             self.updateToken()
         assert self.currentToken == ';'
-        self.printLine()
-        self.output.write("</classVarDec>\n")
         self.updateToken()
     
     def compileSubRoutine(self):
@@ -268,245 +245,205 @@ class CompilationEngine(object):
         assert self.currentToken in ['constructor', 'method', 'function']
         if self.currentToken == 'method':
             self.symbolTable.define("this", self.currentClass, "argument")
-        self.output.write("<subroutineDec>\n")
-        self.printLine()
         self.updateToken()
-        self.printLine()
         self.updateToken()
-        self.printLine()
+        name = self.currentToken
         self.updateToken()
         assert self.currentToken == '('
-        self.printLine()
         self.updateToken()
         self.compileParameterList()
         assert self.currentToken == ')'
-        self.printLine()
-        self.output.write("<subroutineBody>\n")
         self.updateToken()
         assert self.currentToken == '{'
-        self.printLine()
         self.updateToken()
-        while self.currentToken != '}':
-            if self.currentToken == 'var':
-                self.compileVarDec()
-            else:
-                self.compileStatements()
+        while self.currentToken == 'var':
+            self.compileVarDec()
+        nLocals = self.symbolTable.varCount('var')
+        self.writer.writeFunction(".".join([self.currentClass, name]), nLocals)
+        while self.currentToken != '}':            
+            self.compileStatements()
         assert self.currentToken == '}'
-        self.printLine()
-        self.output.write("</subroutineBody>\n")
-        self.output.write("</subroutineDec>\n")
         self.updateToken()
-        print(self.symbolTable.subRoutineTable)
     
     def compileParameterList(self):
-        self.output.write("<parameterList>\n")
         while self.currentToken != ')':
             if self.currentToken != ',':
-                self.printLine()
                 symbolType = self.currentToken
                 self.updateToken()
                 self.symbolTable.define(self.currentToken, symbolType, 'argument')
-                self.printLine()
                 self.updateToken()
             else:
-                self.printLine()
                 self.updateToken()
-        self.output.write("</parameterList>\n")
     
     def compileVarDec(self):
         assert self.currentToken == 'var'
-        self.output.write("<varDec>\n")
-        self.printLine()
         self.updateToken()
         symbolType = self.currentToken
-        self.printLine()
         self.updateToken()
         while self.currentToken != ';':
             if self.currentToken != ',':
                 self.symbolTable.define(self.currentToken, symbolType, 'var')
-            self.printLine()
             self.updateToken()
         assert self.currentToken == ';'
-        self.printLine()
-        self.output.write("</varDec>\n")
         self.updateToken()
     
     def compileStatements(self):
-        self.output.write("<statements>\n")
         while self.currentToken in self.statements:
             self.tokenToFunction[self.currentToken]()
-        self.output.write("</statements>\n")
     
     def compileDo(self):
         assert self.currentToken == 'do'
-        self.output.write("<doStatement>\n")
-        self.printLine()
         self.updateToken()
-        self.printLine()
+        identifier1 = self.currentToken
         self.updateToken()
         if self.currentToken == '.':
-            self.printLine()
             self.updateToken()
-            self.printLine()
+            function = ".".join([identifier1, self.currentToken])
             self.updateToken()
         assert self.currentToken == '('
-        self.printLine()
         self.updateToken()
         self.compileExpressionList()
         assert self.currentToken == ')'
-        self.printLine()
         self.updateToken()
         assert self.currentToken == ';'
-        self.printLine()
-        self.output.write("</doStatement>\n")
         self.updateToken()
+        self.writer.writeCall(function, self.nArgs)
+        self.writer.writePop('temp', 0)
+        self.nArgs = 0
         
     
     def compileLet(self):
         assert self.currentToken == 'let'
-        self.output.write("<letStatement>\n")
-        self.printLine()
         self.updateToken()
-        self.printLine()
         self.updateToken()
         if self.currentToken == '[':
-            self.printLine()
             self.updateToken()
             self.compileExpression()
             assert self.currentToken == ']'
-            self.printLine()
             self.updateToken()
         assert self.currentToken == '='
-        self.printLine()
         self.updateToken()
         self.compileExpression()
         assert self.currentToken == ';'
-        self.printLine()
-        self.output.write("</letStatement>\n")
         self.updateToken()
         
     
     def compileWhile(self):
         assert self.currentToken == 'while'
-        self.output.write("<whileStatement>\n")
-        self.printLine()
         self.updateToken()
         assert self.currentToken == '('
-        self.printLine()
         self.updateToken()
         self.compileExpression()
         assert self.currentToken == ')'
-        self.printLine()
         self.updateToken()
         assert self.currentToken == '{'
-        self.printLine()
         self.updateToken()
         self.compileStatements()
         assert self.currentToken == '}'
-        self.printLine()
-        self.output.write("</whileStatement>\n")
         self.updateToken()
     
     def compileIf(self):
         assert self.currentToken == 'if'
-        self.output.write("<ifStatement>\n")
-        self.printLine()
         self.updateToken()
         assert self.currentToken == '('
-        self.printLine()
         self.updateToken()
         self.compileExpression()
         assert self.currentToken == ')'
-        self.printLine()
         self.updateToken()
         assert self.currentToken == '{'
-        self.printLine()
         self.updateToken()
         self.compileStatements()
         assert self.currentToken == '}'
-        self.printLine()
         self.updateToken()
         if self.currentToken == 'else':
-            self.printLine()
             self.updateToken()
             assert self.currentToken == '{'
-            self.printLine()
             self.updateToken()
             self.compileStatements()
             assert self.currentToken == '}'
-            self.printLine()
             self.updateToken()
-        self.output.write("</ifStatement>\n")
             
     
     def compileReturn(self):
         assert self.currentToken == 'return'
-        self.output.write("<returnStatement>\n")
-        self.printLine()
         self.updateToken()
         if self.currentToken != ';':
             self.compileExpression()
+        else:
+            self.writer.writePush('constant', 0)
         assert self.currentToken == ';'
-        self.printLine()
+        self.writer.writeReturn()
         self.updateToken()
-        self.output.write("</returnStatement>\n")
     
     def compileExpression(self):
-        self.output.write("<expression>\n")
         self.compileTerm()
-        while self.currentToken in self.ops:
-            self.printLine()
+        while self.currentToken in self.ops.keys():
+            self.expression.append(self.currentToken)
             self.updateToken()
             self.compileTerm()
-        self.output.write("</expression>\n")
+        print(self.expression)
+        self.expressionWrite(self.expression)
+        self.expression = []
+        
+    def expressionWrite(self, expressions):
+        print(expressions)
+        if len(expressions) == 1:
+            if expressions[0].isdigit():
+                self.writer.writePush('constant', expressions[0])
+            else:
+                self.writer.writePush(self.symbolTable.kindOf(expressions[0]),
+                                      self.symbolTable.indexOf(expressions[0]))
+        elif len(self.expression) == 2:
+            op = expressions.pop(0)
+            self.expressionWrite(expressions[0])
+            self.writer.writeArithmetic(self.ops[op])
+        elif len(self.expression) > 2:
+            split = 0
+            for exp in expressions:
+                if exp in self.ops.keys():
+                    op = exp
+                    break;      
+                split += 1
+            self.expressionWrite(expressions[:split])
+            self.expressionWrite(expressions[split + 1:])
+            self.writer.writeArithmetic(self.ops[op])
     
     def compileTerm(self):
-        self.output.write("<term>\n")
         if self.currentToken == '(':
-            self.printLine()
             self.updateToken()
             self.compileExpression()
             assert self.currentToken == ')'
-            self.printLine()
             self.updateToken()
         elif self.currentToken in self.unaryOps:
-            self.printLine()
+            self.expression.append(self.currentToken)
             self.updateToken()
             self.compileTerm()
         else:
-            self.printLine()
+            self.expression.append(self.currentToken)
             self.updateToken()
             if self.currentToken == '[':
-                self.printLine()
                 self.updateToken()
                 self.compileExpression()
                 assert self.currentToken == ']'
-                self.printLine()
                 self.updateToken()
             elif self.currentToken in ['.', '(']:
                 if self.currentToken == '.':
-                    self.printLine()
                     self.updateToken()
-                    self.printLine()
                     self.updateToken()
                 assert self.currentToken == '('
-                self.printLine()
                 self.updateToken()
                 self.compileExpressionList()
                 assert self.currentToken == ')'
-                self.printLine()
                 self.updateToken()
-        self.output.write("</term>\n")
     
     def compileExpressionList(self):
-        self.output.write("<expressionList>\n")
         if self.currentToken not in self.stoppers:
             self.compileExpression()
+            self.nArgs += 1
             while self.currentToken == ',':
-                self.printLine()
                 self.updateToken()
                 self.compileExpression()
-        self.output.write("</expressionList>\n")
+                self.nArgs += 1
         
 class JackAnalyzer(object):
     def __init__(self, sourcePath):
@@ -545,7 +482,10 @@ class VMWriter(object):
         self.output.write("pop {} {}\n".format(segment, index))
     
     def writeArithmetic(self, command):
-        self.output.write("{}\n".format(command))
+        if command in ['multiply', 'divide']:
+            self.writeCall(".".join(["Math", command]), 2)
+        else:
+            self.output.write("{}\n".format(command))
     
     def writeLabel(self, label):
         self.output.write("label {}\n".format(label))
